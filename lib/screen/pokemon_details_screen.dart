@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class PokemonDetailsScreen extends StatefulWidget {
-  const PokemonDetailsScreen({super.key});
+  final String url;
+
+  const PokemonDetailsScreen({
+    Key? key,
+    required this.url,
+  }) : super(key: key);
 
   static const routeName = '/poke_details_screen';
 
@@ -17,7 +22,7 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
           appBar: AppBar(
             title: const Text("Pokedex App"),
           ),
-          body: const Text("Details")),
+          body: Text(widget.url)),
     );
   }
 }

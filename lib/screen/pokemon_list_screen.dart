@@ -74,7 +74,8 @@ class PokemonCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const PokemonDetailsScreen()),
+          MaterialPageRoute(
+              builder: (context) => PokemonDetailsScreen(url: pokemon.url)),
         );
       },
     );
