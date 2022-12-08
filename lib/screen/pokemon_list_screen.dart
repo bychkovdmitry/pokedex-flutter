@@ -14,7 +14,10 @@ class PokemonListScreen extends StatefulWidget {
 }
 
 class _PokemonListScreenState extends State<PokemonListScreen> {
+  late ScrollController scrollController;
+
   List<Pokemon> pokemons = [];
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +65,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         ),
         Expanded(
           child: GridView.builder(
+            controller: scrollController,
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 200,
@@ -77,6 +81,27 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         )
       ],
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadPokemonList(0);
+
+    scrollController = ScrollController(initialScrollOffset: 10)
+      ..addListener(() {
+        if (scrollController.offset >=
+                scrollController.position.maxScrollExtent &&
+            !scrollController.position.outOfRange) {
+          loadPokemonList(pokemons.length);
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
   }
 
   Widget buildPokemonItem(Pokemon pokemon) {
@@ -98,17 +123,19 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    loadPokemonList();
-  }
-
-  void loadPokemonList() async {
-    PokemonList? pokemonList = await PokemonApi().getPokemonList();
+  void loadPokemonList(int offset) async {
+    setState(() {
+      isLoading = true;
+    });
+    PokemonList? pokemonList = await PokemonApi().getPokemonList(offset);
     if (pokemonList != null) {
       setState(() {
-        pokemons = pokemonList.pokemons;
+        isLoading = false;
+        pokemons.addAll(pokemonList.pokemons);
+      });
+    } else {
+      setState(() {
+        isLoading = false;
       });
     }
   }

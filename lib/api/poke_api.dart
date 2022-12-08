@@ -5,11 +5,10 @@ import 'package:pokedex/api/model/pokemon_details.dart';
 import 'package:pokedex/api/model/pokemon_list.dart';
 
 class PokemonApi {
-  static const url = "https://pokeapi.co/api/v2/pokemon";
-
   http.Client client = http.Client();
 
-  Future<PokemonList?> getPokemonList() async {
+  Future<PokemonList?> getPokemonList(int offset) async {
+    var url = "https://pokeapi.co/api/v2/pokemon?offset=$offset";
     http.Response response = await client.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
