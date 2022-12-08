@@ -14,27 +14,87 @@ class PokemonListScreen extends StatefulWidget {
 }
 
 class _PokemonListScreenState extends State<PokemonListScreen> {
-  List<PokemonListItem> pokemons = [];
+  List<Pokemon> pokemons = [];
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Pokedex App"),
+        appBar: buildAppBar(),
+        body: buildBody(),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        onPressed: () {},
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.list, color: Colors.black),
         ),
-        body: GridView.builder(
+      ],
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    );
+  }
+
+  Widget buildBody() {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Pokedex",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+                fontSize: 32,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 3 / 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20),
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+            ),
             itemCount: pokemons.length,
             itemBuilder: (BuildContext ctx, index) {
-              return PokemonCard(pokemons[index]);
-            }),
+              return buildPokemonItem(pokemons[index]);
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget buildPokemonItem(Pokemon pokemon) {
+    return InkWell(
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            color: ColorUtils.getColor(pokemon.name),
+            borderRadius: BorderRadius.circular(24)),
+        child: Image.network(ImageUtils.getImage(pokemon.id)),
       ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => PokemonDetailsScreen(url: pokemon.url)),
+        );
+      },
     );
   }
 
@@ -51,33 +111,5 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         pokemons = pokemonList.pokemons;
       });
     }
-  }
-}
-
-class PokemonCard extends StatelessWidget {
-  final PokemonListItem pokemon;
-
-  const PokemonCard(this.pokemon, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            // color: Colors.amber,
-            color: ColorUtils.getColor(pokemon.name),
-            borderRadius: BorderRadius.circular(20)),
-        // child: Image.network(pokemonListItem.url),
-        child: Image.network(ImageUtils.getImage(pokemon.id)),
-      ),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => PokemonDetailsScreen(url: pokemon.url)),
-        );
-      },
-    );
   }
 }

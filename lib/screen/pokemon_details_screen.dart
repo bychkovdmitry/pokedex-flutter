@@ -22,19 +22,39 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Pokedex App"),
-        ),
-        body: FutureBuilder(
-            builder: (ctx, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              } else {
-                return buildPokemonDetails(snapshot.data!);
-              }
-            },
-            future: PokemonApi().getPokemonDetails(widget.url)),
+        extendBodyBehindAppBar: true,
+        appBar: buildAppBar(),
+        body: buildBody(),
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.heart_broken_outlined, color: Colors.white),
+        ),
+      ],
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    );
+  }
+
+  Widget buildBody() {
+    return FutureBuilder(
+      builder: (ctx, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return buildPokemonDetails(snapshot.data!);
+      },
+      future: PokemonApi().getPokemonDetails(widget.url),
     );
   }
 
@@ -46,12 +66,13 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          const SizedBox(height: 16),
+          const SizedBox(height: 80),
           buildPokemonName(pokemonDetails),
           const SizedBox(height: 16),
           buildPokemonTypes(pokemonDetails),
-          const SizedBox(height: 16),
-          Image.network(ImageUtils.getImage(pokemonDetails.id))
+          const SizedBox(height: 144),
+          buildPokemonImage(pokemonDetails),
+          buildPokemonTabs(pokemonDetails),
         ],
       ),
     );
@@ -80,28 +101,177 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Wrap(
-            spacing: 6.0,
-            runSpacing: 6.0,
-            children: pokemonDetails.types.map(buildPokemonType).toList()),
-      ),
-    );
-  }
-
-  Widget buildPokemonType(String label) {
-    return Container(
-      decoration: const BoxDecoration(
-          color: Colors.white24,
-          borderRadius: BorderRadius.all(Radius.circular(20))),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      // child: Center(
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 18,
+          spacing: 8,
+          runSpacing: 8,
+          children: pokemonDetails.types.map((item) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                item,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
   }
+
+  Widget buildPokemonImage(PokemonDetails pokemonDetails) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width,
+          height: 64,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+          ),
+        ),
+        Positioned(
+            right: 0,
+            bottom: 8,
+            left: 0,
+            child: SizedBox(
+              height: 196,
+              child: Image.network(ImageUtils.getImage(pokemonDetails.id),
+                  fit: BoxFit.fitHeight),
+            )),
+      ],
+    );
+  }
+
+  Widget buildPokemonTabs(PokemonDetails pokemonDetails) {
+    return Expanded(
+      child: Container(
+        color: Colors.white,
+        child: DefaultTabController(
+          length: 4,
+          child: Column(
+            children: [
+              TabBar(
+                indicatorColor: Colors.blue,
+                indicatorSize: TabBarIndicatorSize.label,
+                tabs: DetailTabs.values.map((item) {
+                  return Tab(
+                    icon: Text(
+                      item.name,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: DetailTabs.values.map((item) {
+                    if (item == DetailTabs.about) {
+                      return buildAboutPage(pokemonDetails);
+                    } else {
+                      return buildFallbackPage(item.name);
+                    }
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildFallbackPage(String name) {
+    return Align(
+      alignment: Alignment.center,
+      child: Text(
+        name,
+        style: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w800,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+
+  Widget buildAboutPage(PokemonDetails pokemonDetails) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                buildAboutPageRow('Height', '${pokemonDetails.height} m'),
+                buildAboutPageRow('Weight', '${pokemonDetails.weight} kg'),
+                buildAboutPageRow(
+                    'Abilities',
+                    pokemonDetails.abilities
+                        .map((item) => item.capitalize())
+                        .join(", ")),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildAboutPageRow(String text, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 80,
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 25),
+          Text(value,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+enum DetailTabs {
+  about(name: "About"),
+  baseStats(name: "Base Stats"),
+  evolution(name: "Evolution"),
+  moves(name: "Moves");
+
+  const DetailTabs({
+    required this.name,
+  });
+
+  final String name;
 }
