@@ -14,72 +14,76 @@ class PokemonListScreen extends StatefulWidget {
 }
 
 class _PokemonListScreenState extends State<PokemonListScreen> {
-  late ScrollController scrollController;
+  final PokemonApi _pokemonApi = PokemonApi();
+  final List<Pokemon> _pokemons = [];
+  bool _isLoading = false;
 
-  List<Pokemon> pokemons = [];
-  bool isLoading = false;
+  late final ScrollController _scrollController =
+      ScrollController(initialScrollOffset: 10)
+        ..addListener(
+          () {
+            if (_scrollController.offset >=
+                    _scrollController.position.maxScrollExtent &&
+                !_scrollController.position.outOfRange &&
+                !_isLoading) {
+              loadPokemonList(_pokemons.length);
+            }
+          },
+        );
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: buildAppBar(),
-        body: buildBody(),
-      ),
-    );
-  }
-
-  AppBar buildAppBar() {
-    return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () {},
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.list, color: Colors.black),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {},
+          ),
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.list, color: Colors.black),
+            ),
+          ],
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
-      ],
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    );
-  }
-
-  Widget buildBody() {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Pokedex",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w800,
-                fontSize: 32,
+        body: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Pokedex",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 32,
+                  ),
+                ),
               ),
             ),
-          ),
+            Expanded(
+              child: GridView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  childAspectRatio: 3 / 2,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                ),
+                itemCount: _pokemons.length,
+                itemBuilder: (BuildContext ctx, index) {
+                  return PokemonListItem(pokemon: _pokemons[index]);
+                },
+              ),
+            )
+          ],
         ),
-        Expanded(
-          child: GridView.builder(
-            controller: scrollController,
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-              childAspectRatio: 3 / 2,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-            ),
-            itemCount: pokemons.length,
-            itemBuilder: (BuildContext ctx, index) {
-              return buildPokemonItem(pokemons[index]);
-            },
-          ),
-        )
-      ],
+      ),
     );
   }
 
@@ -87,24 +91,42 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   void initState() {
     super.initState();
     loadPokemonList(0);
-
-    scrollController = ScrollController(initialScrollOffset: 10)
-      ..addListener(() {
-        if (scrollController.offset >=
-                scrollController.position.maxScrollExtent &&
-            !scrollController.position.outOfRange) {
-          loadPokemonList(pokemons.length);
-        }
-      });
   }
 
   @override
   void dispose() {
-    scrollController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  Widget buildPokemonItem(Pokemon pokemon) {
+  void loadPokemonList(int offset) async {
+    setState(() {
+      _isLoading = true;
+    });
+    PokemonList? pokemonList = await _pokemonApi.getPokemonList(offset);
+    if (pokemonList != null) {
+      setState(() {
+        _isLoading = false;
+        _pokemons.addAll(pokemonList.pokemons);
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
+
+class PokemonListItem extends StatelessWidget {
+  const PokemonListItem({
+    Key? key,
+    required this.pokemon,
+  }) : super(key: key);
+
+  final Pokemon pokemon;
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       child: Container(
           alignment: Alignment.center,
@@ -172,22 +194,5 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         );
       },
     );
-  }
-
-  void loadPokemonList(int offset) async {
-    setState(() {
-      isLoading = true;
-    });
-    PokemonList? pokemonList = await PokemonApi().getPokemonList(offset);
-    if (pokemonList != null) {
-      setState(() {
-        isLoading = false;
-        pokemons.addAll(pokemonList.pokemons);
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-    }
   }
 }
