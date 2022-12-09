@@ -23,42 +23,46 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
     return MaterialApp(
       home: Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: buildAppBar(),
-        body: buildBody(),
-      ),
-    );
-  }
-
-  AppBar buildAppBar() {
-    return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.heart_broken_outlined, color: Colors.white),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon:
+                  const Icon(Icons.heart_broken_outlined, color: Colors.white),
+            ),
+          ],
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
-      ],
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+        body: FutureBuilder(
+          builder: (ctx, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            } else {
+              return PokemonDetailsPage(pokemonDetails: snapshot.data!);
+            }
+          },
+          future: PokemonApi().getPokemonDetails(widget.url),
+        ),
+      ),
     );
   }
+}
 
-  Widget buildBody() {
-    return FutureBuilder(
-      builder: (ctx, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return buildPokemonDetails(snapshot.data!);
-      },
-      future: PokemonApi().getPokemonDetails(widget.url),
-    );
-  }
+class PokemonDetailsPage extends StatelessWidget {
+  final PokemonDetails pokemonDetails;
 
-  Widget buildPokemonDetails(PokemonDetails pokemonDetails) {
+  const PokemonDetailsPage({
+    Key? key,
+    required this.pokemonDetails,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: double.infinity,
       width: double.infinity,
@@ -130,7 +134,7 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
       clipBehavior: Clip.none,
       children: [
         Container(
-          width: MediaQuery.of(context).size.width,
+          width: double.infinity,
           height: 64,
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -241,7 +245,7 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          SizedBox(
             width: 80,
             child: Text(
               text,

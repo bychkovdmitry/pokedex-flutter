@@ -118,12 +118,12 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
 }
 
 class PokemonListItem extends StatelessWidget {
+  final Pokemon pokemon;
+
   const PokemonListItem({
     Key? key,
     required this.pokemon,
   }) : super(key: key);
-
-  final Pokemon pokemon;
 
   @override
   Widget build(BuildContext context) {
